@@ -2,11 +2,15 @@
 import redis
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf.csrf import CSRFProtect
 
 
 class Config(object):
     """配置类"""
     DEBUG = True
+
+    # 设置SECRET_KEY
+    SECRET_KEY = 'qyEzGidVnaRZNInFA6lO7AoPgIJGr83Em+wXttn8rBEGnbRswiviq5moyKDXG21j'
 
     # 数据库配置
     SQLALCHEMY_DATABASE_URI = 'mysql://root:mysql@172.16.179.139:3306/ihome26'
@@ -29,8 +33,11 @@ db = SQLAlchemy(app)
 # redis
 redis_store = redis.StrictRedis(host=Config.REDIS_HOST, port=Config.REDIS_PORT)
 
+# 开启csrf保护
+CSRFProtect(app)
 
-@app.route('/')
+
+@app.route('/', methods=['GET', 'POST'])
 def index():
     # 测试redis
     # 因为这里是测试代码，所以注释掉
