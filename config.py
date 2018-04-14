@@ -36,3 +36,9 @@ class ProductionConfig(Config):
     """生成阶段的配置类"""
     # 数据库配置
     SQLALCHEMY_DATABASE_URI = 'mysql://root:mysql@172.16.179.139:3306/ihome'
+
+
+config_dict = {
+    'development': DevelopmentConfig,
+    'production': ProductionConfig
+}
