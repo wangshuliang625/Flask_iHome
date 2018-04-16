@@ -1,5 +1,5 @@
 # coding=utf-8
-from iHome import create_app, db
+from iHome import create_app, db, models
 
 # from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand, Manager

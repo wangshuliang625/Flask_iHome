@@ -16,5 +16,7 @@ def send_html_file(file_name):
         file_name = 'html/' + file_name
 
     # 获取对应的静态页面并返回给浏览器
+    # send_static_file('html/index.html')
+    # send_static_file('html/login.html')
     return current_app.send_static_file(file_name)
 
