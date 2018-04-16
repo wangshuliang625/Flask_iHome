@@ -6,6 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
 
 from config import config_dict
+from iHome.utils.commons import RegexConverter
 
 
 # 创建db对象
@@ -37,6 +38,9 @@ def create_app(config_name):
 
     # session存储
     Session(app)
+
+    # 添加路由转换器
+    app.url_map.converters['re'] = RegexConverter
 
     # 注册蓝图
     from iHome.api_1_0 import api
