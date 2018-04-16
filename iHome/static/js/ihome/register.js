@@ -25,8 +25,6 @@ function generateImageCode() {
     // 拼接url
     var url = '/api/v1.0/image_code?cur_id=' + imageCodeId;
 
-
-    // 请求获取图片验证码，传递uuid
     // 设置图片验证码的img标签的src属性
     $('.image-code>img').attr('src', url);
 }

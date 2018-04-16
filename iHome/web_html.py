@@ -1,4 +1,5 @@
 # coding=utf-8
+# 此蓝图用于提供静态页面
 from flask import Blueprint, current_app
 
 html = Blueprint('html', __name__)
