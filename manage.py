@@ -14,16 +14,8 @@ Migrate(app, db)
 manager.add_command('db', MigrateCommand)
 
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    # 测试redis
-    # 因为这里是测试代码，所以注释掉
-    # redis_store.set('name', 'laowang')
-    # 测试session
-    # session['name'] = 'smart'
-    return 'index'
-
 if __name__ == '__main__':
     # 运行开发web服务器
     # app.run()
+    print app.url_map
     manager.run()

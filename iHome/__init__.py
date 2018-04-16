@@ -1,14 +1,17 @@
 # coding=utf-8
 import redis
-from flask import Flask, session
+from flask import Flask
+from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
-from flask_session import Session
 
 from config import config_dict
 
+
 # 创建db对象
 db = SQLAlchemy()
+
+redis_store = None
 
 
 # 工厂方法: 根据传入的参数不同创建不同环境下的app的对象
@@ -26,6 +29,7 @@ def create_app(config_name):
     db.init_app(app)
 
     # redis
+    global redis_store
     redis_store = redis.StrictRedis(host=config_cls.REDIS_HOST, port=config_cls.REDIS_PORT)
 
     # 开启csrf保护
@@ -33,5 +37,9 @@ def create_app(config_name):
 
     # session存储
     Session(app)
+
+    # 注册蓝图
+    from iHome.api_1_0 import api
+    app.register_blueprint(api, url_prefix='/api/v1.0')
 
     return app
