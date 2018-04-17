@@ -2,10 +2,12 @@
 # 提供图片验证码和短信验证码
 import json
 import re
+import random
 from . import api
 from iHome import redis_store, constants
 from iHome.response_code import RET
 from iHome.utils.captcha.captcha import captcha
+from iHome.utils.sms import CCP
 
 from flask import request, jsonify, make_response, abort, current_app
 
@@ -18,8 +20,10 @@ def send_sms_code():
     2. 判断参数的完整性并且进行参数校验
     3. 从redis中获取对应的图片验证码（如果获取不到，图片验证码过期）
     4. 对比图片验证码，如果一致
-    5. 发送短信验证码
-    6. 返回信息，发送短信验证码成功
+    5. 生成短信验证码
+    6. 在redis中保存短信验证码内容
+    7. 发送短信验证码
+    8. 返回信息，发送短信验证码成功
     """
 
     # 1. 获取参数（手机号，图片验证码，图片验证码id）
@@ -54,8 +58,24 @@ def send_sms_code():
         return jsonify(errno=RET.DATAERR, errmsg='图片验证码错误')
 
     # 5. todo: 发送短信验证码
+    # 5. 生成短信验证码
+    sms_code = '%06d' % random.randint(0, 999999) # 333
 
-    # 6. 返回信息，发送短信验证码成功
+    # 6. 在redis中保存短信验证码内容
+    try:
+        redis_store.set('sms_code:%s' % mobile, sms_code, constants.SMS_CODE_REDIS_EXPIRES)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='保存验证码失败')
+
+    # 7. 发送短信验证码
+    res = CCP().send_template_sms(mobile, [sms_code, constants.SMS_CODE_REDIS_EXPIRES/60], 1)
+
+    if res != 1:
+        # 发送失败
+        return jsonify(errno=RET.THIRDERR, errmsg='发送短信失败')
+
+    # 8. 返回信息，发送短信验证码成功
     return jsonify(errno=RET.OK, errmsg='发送短信成功')
 
 
