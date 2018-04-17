@@ -1,5 +1,6 @@
 # coding=utf-8
 import redis
+import logging
 
 
 class Config(object):
@@ -30,12 +31,16 @@ class Config(object):
 class DevelopmentConfig(Config):
     """开发阶段的配置类"""
     DEBUG = True
+    # 设置开发阶段的日志等级
+    LOG_LEVEL = logging.DEBUG
 
 
 class ProductionConfig(Config):
-    """生成阶段的配置类"""
+    """生产阶段的配置类"""
     # 数据库配置
     SQLALCHEMY_DATABASE_URI = 'mysql://root:mysql@172.16.179.139:3306/ihome'
+    # 设置开发阶段的日志等级
+    LOG_LEVEL = logging.WARNING
 
 
 config_dict = {

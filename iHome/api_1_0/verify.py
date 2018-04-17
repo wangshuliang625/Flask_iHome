@@ -5,7 +5,7 @@ from iHome import redis_store, constants
 from iHome.response_code import RET
 from iHome.utils.captcha.captcha import captcha
 
-from flask import request, jsonify, make_response, abort
+from flask import request, jsonify, make_response, abort, current_app
 
 
 @api.route('/image_code')
@@ -32,7 +32,7 @@ def get_image_code():
     try:
         redis_store.set('imagecode:%s' % cur_id, text, constants.IMAGE_CODE_REDIS_EXPIRES)
     except Exception as e:
-        print e
+        current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg='保存图片验证码失败')
 
     # 4. 返回验证码图片
