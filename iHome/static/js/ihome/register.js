@@ -31,11 +31,13 @@ function generateImageCode() {
 
 function sendSMSCode() {
     // 校验参数，保证输入框有数据填写
+    // 移除点击事件
     $(".phonecode-a").removeAttr("onclick");
     var mobile = $("#mobile").val();
     if (!mobile) {
         $("#mobile-err span").html("请填写正确的手机号！");
         $("#mobile-err").show();
+        // 重新添加点击事件
         $(".phonecode-a").attr("onclick", "sendSMSCode();");
         return;
     } 
@@ -48,6 +50,52 @@ function sendSMSCode() {
     }
 
     // TODO: 通过ajax方式向后端接口发送请求，让后端发送短信验证码
+    // 组织参数
+    var params = {
+        "mobile": mobile,
+        "image_code": imageCode,
+        "image_code_id": imageCodeId
+    };
+
+    // 发起请求，获取短信验证码
+    $.ajax({
+        'url': '/api/v1.0/sms_code', // 请求的url地址
+        'type': 'post', // 请求方式
+        'data': JSON.stringify(params), // 请求传递的数据
+        'contentType': 'applcation/json', // 请求数据的类型
+        'success': function (resp) {
+            // 回调函数
+            // console.log(resp);
+            if (resp.errno == '0') {
+                // 发送成功
+                // 进行倒计时60
+                var num = 60;
+                var tid = setInterval(function () {
+                    if (num<=0) {
+                        // 倒计时完成，清除定时器
+                        clearInterval(tid);
+                        // 重置内容
+                        $('.phonecode-a').text('获取验证码');
+                        // 重新添加点击事件
+                        $(".phonecode-a").attr("onclick", "sendSMSCode();");
+                    }
+                    else {
+                        // 设置倒计时剩余的秒数
+                        $('.phonecode-a').text(num+'秒');
+                    }
+                    // 剩余秒数减少1
+                    num -= 1;
+                }, 1000)
+            }
+            else {
+                // 发送失败
+                $("#password2-err span").html(resp.errmsg);
+                $('#password2-err').show();
+                // 重新添加点击事件
+                $(".phonecode-a").attr("onclick", "sendSMSCode();");
+            }
+        }
+    })
 }
 
 $(document).ready(function() {
