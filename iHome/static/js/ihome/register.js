@@ -63,6 +63,9 @@ function sendSMSCode() {
         'type': 'post', // 请求方式
         'data': JSON.stringify(params), // 请求传递的数据
         'contentType': 'applcation/json', // 请求数据的类型
+        'headers': {
+            'X-CSRFToken': getCookie('csrf_token')
+        },
         'success': function (resp) {
             // 回调函数
             // console.log(resp);
