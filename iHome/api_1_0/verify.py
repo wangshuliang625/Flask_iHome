@@ -60,6 +60,7 @@ def send_sms_code():
     # 5. todo: 发送短信验证码
     # 5. 生成短信验证码
     sms_code = '%06d' % random.randint(0, 999999) # 333
+    current_app.logger.info('短信验证码:'+sms_code)
 
     # 6. 在redis中保存短信验证码内容
     try:
@@ -97,6 +98,7 @@ def get_image_code():
     # 2. 生成图片验证码
     # 图片名称  验证码文本  验证码图片的内容
     name, text, data = captcha.generate_captcha()
+    current_app.logger.info('图片验证码:'+text)
 
     # 3. 在redis中存储图片验证码
     # redis_store.set('键名', '验证码文本', '验证有效时间')

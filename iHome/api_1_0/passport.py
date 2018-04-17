@@ -52,6 +52,7 @@ def register():
     # 用户名默认使用注册手机号
     user.name = mobile
     # todo: 注册密码加密保存
+    user.password = password
 
     # 5. 添加用户信息到数据库
     try:
