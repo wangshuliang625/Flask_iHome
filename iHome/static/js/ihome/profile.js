@@ -29,6 +29,31 @@ $(document).ready(function () {
     })
 
     // TODO: 管理上传用户头像表单的行为
+    $('#form-avatar').submit(function (e) {
+        // 阻止表单默认提交行为
+        e.preventDefault();
+
+        // 请求上传用户的头像
+        // 模拟表单的提交操作
+        $(this).ajaxSubmit({
+            'url': '/api/v1.0/user/avatar',
+            'type': 'post',
+            'headers': {
+                'X-CSRFToken': getCookie('csrf_token')
+            },
+            'success': function (resp) {
+                if (resp.errno == '0') {
+                    // 上传头像成功
+                    // 设置用户的头像的img标签的src属性
+                    $('#user-avatar').attr('src', resp.data.avatar_url);
+                }
+                else {
+                    // 上传头像失败
+                    alert(resp.errmsg);
+                }
+            }
+        })
+    })
 
     // TODO: 管理用户名修改的逻辑
 
