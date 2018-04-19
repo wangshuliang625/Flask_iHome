@@ -9,6 +9,20 @@ from iHome.models import User
 from flask import request, jsonify, current_app, session
 
 
+@api.route('/session', methods=['DELETE'])
+def logout():
+    """
+    退出用户登录:
+    1. 清除session中用户的登录信息
+    2. 返回应答，退出登录成功
+    """
+    # 1. 清除session中用户的登录信息
+    session.clear()
+
+    # 2. 返回应答，退出登录成功
+    return jsonify(errno=RET.OK, errmsg='退出登录成功')
+
+
 @api.route('/session', methods=['POST'])
 def login():
     """

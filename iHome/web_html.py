@@ -26,3 +26,6 @@ def send_html_file(file_name):
     response.set_cookie('csrf_token', generate_csrf())
     return response
 
+
+
+

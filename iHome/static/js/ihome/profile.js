@@ -22,6 +22,9 @@ $(document).ready(function () {
             // 设置用户的个人的用户名
             $('#user-name').val(resp.data.username);
         }
+        else if (resp.errno == '4101') {
+            location.href = 'login.html';
+        }
         else {
             // 失败
             alert(resp.errmsg);
@@ -46,6 +49,9 @@ $(document).ready(function () {
                     // 上传头像成功
                     // 设置用户的头像的img标签的src属性
                     $('#user-avatar').attr('src', resp.data.avatar_url);
+                }
+                else if (resp.errno == '4101') {
+                    location.href = 'login.html';
                 }
                 else {
                     // 上传头像失败
@@ -82,6 +88,9 @@ $(document).ready(function () {
                 if (resp.errno == "0") {
                     // 设置用户名成功
                     showSuccessMsg();
+                }
+                else if (resp.errno == '4101') {
+                    location.href = 'login.html';
                 }
                 else if (resp.errno == "4003") {
                     // 用户名重复

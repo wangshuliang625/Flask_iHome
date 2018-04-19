@@ -1,14 +1,16 @@
 # coding=utf-8
 from . import api
-from flask import session, current_app, jsonify, request
+from flask import session, current_app, jsonify, request, g
 
 from iHome import db, constants
 from iHome.models import User
 from iHome.response_code import RET
+from iHome.utils.commons import login_required
 from iHome.utils.image_storage import image_storage
 
 
 @api.route('/user/name', methods=['PUT'])
+@login_required
 def set_user_name():
     """
     设置用户的用户名:
@@ -25,7 +27,8 @@ def set_user_name():
         return jsonify(errno=RET.PARAMERR, errmsg='缺少参数')
     
     # 2. 设置用户的用户名
-    user_id = session.get('user_id')
+    # user_id = session.get('user_id')
+    user_id = g.user_id
 
     # 校验用户名是否已存在
     try:
@@ -61,6 +64,7 @@ def set_user_name():
 
 
 @api.route('/user/avatar', methods=['POST'])
+@login_required
 def set_user_avatar():
     """
     保存上传用户的头像:
@@ -85,6 +89,7 @@ def set_user_avatar():
 
     # 3. 设置用户的头像记录
     user_id = session.get('user_id')
+    # user_id = g.user_id
 
     try:
         user = User.query.get(user_id)
@@ -110,6 +115,7 @@ def set_user_avatar():
 
 
 @api.route('/user')
+@login_required
 def get_user_info():
     """
     获取用户的个人信息：
@@ -120,6 +126,7 @@ def get_user_info():
     """
     # 1. 获取当前登录用户的id
     user_id = session.get('user_id')
+    # user_id = g.user_id
 
     # 2. 根据id获取用户的信息（如果查不到，说明用户不存在)
     try:
