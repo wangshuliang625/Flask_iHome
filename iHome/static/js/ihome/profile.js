@@ -56,6 +56,43 @@ $(document).ready(function () {
     })
 
     // TODO: 管理用户名修改的逻辑
+    $('#form-name').submit(function (e) {
+        // 阻止表单默认提交行为
+        e.preventDefault();
 
+        var username = $("#user-name").val();
+        if (!username) {
+            return;
+        }
+
+        // 请求修改用户名
+        var params = {
+            "username": username
+        }
+
+        $.ajax({
+            "url": "/api/v1.0/user/name",
+            "type": "put",
+            "data": JSON.stringify(params),
+            "contentType": "application/json",
+            "headers": {
+                "X-CSRFToken": getCookie("csrf_token")
+            },
+            "success": function (resp) {
+                if (resp.errno == "0") {
+                    // 设置用户名成功
+                    showSuccessMsg();
+                }
+                else if (resp.errno == "4003") {
+                    // 用户名重复
+                    $(".error-msg").show();
+                }
+                else {
+                    // 设置失败
+                    alert(resp.errmsg);
+                }
+            }
+        })
+    })
 })
 
