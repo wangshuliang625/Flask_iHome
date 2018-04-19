@@ -91,6 +91,17 @@ def register():
     if sms_code != phonecode:
         return jsonify(errno=RET.DATAERR, errmsg='短信验证码错误')
 
+    # 补充: 校验手机号是否已经被注册
+    try:
+        user = User.query.filter(User.mobile == mobile).first()
+    except Exception as e:
+        user = None
+        current_app.logger.error(e)
+
+    if user:
+        # 手机号已经被注册
+        return jsonify(errno=RET.DATAEXIST, errmsg='手机号已经被注册')
+
     # 4. 创建User并保存注册用户的信息
     user = User()
     user.mobile = mobile
@@ -107,6 +118,11 @@ def register():
         db.session.rollback()
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg='保存用户信息失败')
+
+    # 补充：在session中记录用户的登录状态
+    session['user_id'] = user.id
+    session['username'] = user.name
+    session['mobile'] = user.mobile
 
     # 6. 返回应答，告诉注册成功
     return jsonify(errno=RET.OK, errmsg='注册成功')
