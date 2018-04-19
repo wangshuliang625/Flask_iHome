@@ -70,11 +70,11 @@ def send_sms_code():
         return jsonify(errno=RET.DBERR, errmsg='保存验证码失败')
 
     # 7. 发送短信验证码
-    res = CCP().send_template_sms(mobile, [sms_code, constants.SMS_CODE_REDIS_EXPIRES/60], 1)
-
-    if res != 1:
-        # 发送失败
-        return jsonify(errno=RET.THIRDERR, errmsg='发送短信失败')
+    # res = CCP().send_template_sms(mobile, [sms_code, constants.SMS_CODE_REDIS_EXPIRES/60], 1)
+    #
+    # if res != 1:
+    #     # 发送失败
+    #     return jsonify(errno=RET.THIRDERR, errmsg='发送短信失败')
 
     # 8. 返回信息，发送短信验证码成功
     return jsonify(errno=RET.OK, errmsg='发送短信成功')

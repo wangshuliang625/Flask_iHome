@@ -38,6 +38,10 @@ class User(BaseModel, db.Model):
         # 对密码进行加密并保存
         self.password_hash = generate_password_hash(value)
 
+    def check_user_password(self, password):
+        # 对用户的密码进行验证
+        return check_password_hash(self.password_hash, password)
+
 # user = User()
 #
 # user.password = password
