@@ -23,12 +23,11 @@ def login_required(view_func):
         # 尝试从session中获取user_id
         user_id = session.get('user_id')
 
-        # 使用g变量临时保存user_id, g变量临时保存的内容可以在每个请求开始到请求结束的过程中使用
-        # 这里使用g变量临时保存user_id，在后续的api代码中就不需要再次从session中获取user_id
-        g.user_id = user_id
-
         if user_id:
             # 用户已登录
+            # 使用g变量临时保存user_id, g变量临时保存的内容可以在每个请求开始到请求结束的过程中使用
+            # 这里使用g变量临时保存user_id，在后续的api代码中就不需要再次从session中获取user_id
+            g.user_id = user_id
             return view_func(*args, **kwargs)
         else:
             # 用户未登录
