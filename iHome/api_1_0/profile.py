@@ -14,9 +14,23 @@ from iHome.utils.image_storage import image_storage
 def get_user_auth():
     """
     获取用户实名认证信息：
-    :return:
+    1. 获取登录用户的信息
+    2. 组织数据，返回应答
     """
-    pass
+    # 1. 获取登录用户的信息
+    user_id = g.user_id
+
+    try:
+        user = User.query.get(user_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='查询用户信息失败')
+
+    if not user:
+        return jsonify(errno=RET.USERERR, errmsg='用户不存在')
+
+    # 2. 组织数据，返回应答
+    return jsonify(errno=RET.OK, errmsg='OK', data=user.auth_to_dict())
 
 
 @api.route('/user/auth', methods=['POST'])
@@ -67,6 +81,8 @@ def set_user_auth():
         
     # 4. 返回应答
     return jsonify(errno=RET.OK, errmsg='实名认证成功')
+
+# set_user_name.__name__ = 'wrapper'
 
 
 @api.route('/user/name', methods=['PUT'])
