@@ -54,7 +54,11 @@ def save_house_image():
     house_image = HouseImage()
     house_image.house_id = house_id
     house_image.url = key
-    
+
+    # 判断当前房屋是否有默认的图片，如果没有，进行添加
+    if not house.index_image_url:
+        house.index_image_url = key
+
     # 4. 添加房屋图片信息到数据库
     try:
         db.session.add(house_image)
@@ -63,7 +67,7 @@ def save_house_image():
         db.session.rollback()
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg='保存房屋图片信息失败')
-        
+
     # 5. 返回应答
     img_url = constants.QINIU_DOMIN_PREFIX + key
     return jsonify(errno=RET.OK, errmsg='OK', data={'img_url': img_url})
