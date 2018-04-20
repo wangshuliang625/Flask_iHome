@@ -9,7 +9,7 @@ from iHome.models import House, Facility, HouseImage
 from iHome.utils.commons import login_required
 from iHome.utils.image_storage import image_storage
 
-from flask import current_app, jsonify, request, g
+from flask import current_app, jsonify, request, g, session
 
 
 @api.route('/house/<int:house_id>')
@@ -30,7 +30,10 @@ def get_house_info(house_id):
         return jsonify(errno=RET.NODATA, errmsg='房屋不存在')
 
     # 2. 组织数据，返回应答
-    return jsonify(errno=RET.OK, errmsg='OK', data=house.to_full_dict())
+    # 尝试从session获取user_id, 如果取不到，返回-1
+    user_id = session.get('user_id', -1)
+
+    return jsonify(errno=RET.OK, errmsg='OK', data={'house': house.to_full_dict(), 'user_id': user_id})
 
 
 @api.route('/houses/image', methods=["POST"])

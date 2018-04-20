@@ -22,7 +22,7 @@ $(document).ready(function(){
         if (resp.errno == "0") {
             // 获取房屋信息成功
             // 设置房屋的图片信息
-            var html = template("house-image-tmpl", {"img_urls": resp.data.img_urls, "price": resp.data.price});
+            var html = template("house-image-tmpl", {"img_urls": resp.data.house.img_urls, "price": resp.data.house.price});
             $(".swiper-container").html(html);
             // TODO: 数据加载完毕后,需要设置幻灯片对象，开启幻灯片滚动
             var mySwiper = new Swiper ('.swiper-container', {
@@ -34,8 +34,14 @@ $(document).ready(function(){
             });
 
             // 设置房屋的详细信息
-            html = template("house-detail-tmpl", {"house": resp.data});
+            html = template("house-detail-tmpl", {"house": resp.data.house});
             $(".detail-con").html(html);
+
+            // 判断即刻预订按钮是否显示
+            if (resp.data.house.user_id != resp.data.user_id) {
+                $(".book-house").show();
+                $(".book-house").attr("href", "/booking.html?hid=" + resp.data.house.hid);
+            }
         }
         else {
             // 出错
