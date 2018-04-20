@@ -119,8 +119,6 @@ $(document).ready(function(){
         }
     })
 
-
-
     $('.modal').on('show.bs.modal', centerModals);      //当模态框出现的时候
     $(window).on('resize', centerModals);               //当窗口大小变化的时候
     $("#start-date").datepicker({

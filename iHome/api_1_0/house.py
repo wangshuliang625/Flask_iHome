@@ -22,7 +22,7 @@ def get_houses_index():
     """
     # 1. 获取房屋的信息，按照创建时间进行降序排序，默认取前5个
     try:
-        houses = House.query.order_by(House.create_time.desc()).limit(5).all()
+        houses = House.query.order_by(House.create_time.desc()).limit(constants.HOME_PAGE_MAX_HOUSES).all()
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg='获取房屋信息失败')

@@ -22,6 +22,7 @@ $(document).ready(function(){
                 $("#area-id").append('<option value="' + area.aid + '">' + area.aname + '</option>')
             }*/
 
+            // 前端模板art_template
             var html = template("areas-tmpl", {"areas": areas});
             $("#area-id").append(html);
         }
