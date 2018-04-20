@@ -9,6 +9,18 @@ from iHome.models import User
 from flask import request, jsonify, current_app, session
 
 
+@api.route('/session')
+def check_user_login():
+    """
+    获取登录用户的信息
+    """
+    # 尝试从session中获取username和user_id, 如果获取不到，用户未登录
+    user_id = session.get('user_id')
+    username = session.get('username')
+
+    return jsonify(errno=RET.OK, errmsg='OK', data={'user_id': user_id, 'username': username})
+
+
 @api.route('/session', methods=['DELETE'])
 def logout():
     """
