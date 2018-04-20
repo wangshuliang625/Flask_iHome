@@ -1,8 +1,9 @@
 # coding=utf-8
 # 此文件定义和房屋有关的api
+import json
 from . import api
 
-from iHome import db, constants
+from iHome import db, constants, redis_store
 from iHome.models import Area
 from iHome.response_code import RET
 from iHome.models import House, Facility, HouseImage
@@ -203,6 +204,15 @@ def get_areas():
     1. 从数据库中获取所有的城区信息
     2. 组织数据，返回应答
     """
+    # 先尝试从缓存中获取城区的信息，如果获取到，直接返回，如果获取不到，再去查询数据库
+    try:
+        area_json_str = redis_store.get("areas")
+        if area_json_str:
+            areas_dict_li = json.loads(area_json_str)
+            return jsonify(errno=RET.OK, errmsg='OK', data=areas_dict_li)
+    except Exception as e:
+        current_app.logger.error(e)
+
     # 1. 从数据库中获取所有的城区信息
     try:
         areas = Area.query.all()
@@ -214,5 +224,11 @@ def get_areas():
     areas_dict_li = []
     for area in areas:
         areas_dict_li.append(area.to_dict())
+
+    # redis设置缓存
+    try:
+        redis_store.set('areas', json.dumps(areas_dict_li), constants.AREA_INFO_REDIS_EXPIRES)
+    except Exception as e:
+        current_app.logger.error(e)
 
     return jsonify(errno=RET.OK, errmsg='OK', data=areas_dict_li)
