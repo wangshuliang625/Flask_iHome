@@ -12,6 +12,28 @@ from iHome.utils.image_storage import image_storage
 from flask import current_app, jsonify, request, g, session
 
 
+@api.route('/houses/index')
+def get_houses_index():
+    """
+    获取首页展示房屋信息：
+    1. 获取房屋的信息，按照创建时间进行降序排序，默认取前5个
+    2. 组织数据，返回应答
+    """
+    # 1. 获取房屋的信息，按照创建时间进行降序排序，默认取前5个
+    try:
+        houses = House.query.order_by(House.create_time.desc()).limit(5).all()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='获取房屋信息失败')
+
+    # 2. 组织数据，返回应答
+    houses_dict_li = []
+    for house in houses:
+        houses_dict_li.append(house.to_basic_dict())
+
+    return jsonify(errno=RET.OK, errmsg='OK', data=houses_dict_li)
+
+
 @api.route('/house/<int:house_id>')
 def get_house_info(house_id):
     """
