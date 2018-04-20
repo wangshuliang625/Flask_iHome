@@ -2,13 +2,71 @@
 # 此文件定义和房屋有关的api
 from . import api
 
-from iHome import db
+from iHome import db, constants
 from iHome.models import Area
 from iHome.response_code import RET
-from iHome.models import House, Facility
+from iHome.models import House, Facility, HouseImage
 from iHome.utils.commons import login_required
+from iHome.utils.image_storage import image_storage
 
 from flask import current_app, jsonify, request, g
+
+
+@api.route('/houses/image', methods=["POST"])
+@login_required
+def save_house_image():
+    """
+    上传房屋的图片:
+    1. 接收房屋的id 和 房屋图片文件 并进行参数校验
+    2. 上传房屋的图片到七牛云
+    3. 创建HouseImage对象并保存房屋图片信息
+    4. 添加房屋图片信息到数据库
+    5. 返回应答
+    """
+    # 1. 接收房屋的id 和 房屋图片文件 并进行参数校验
+    house_id = request.form.get('house_id')
+    
+    if not house_id:
+        return jsonify(errno=RET.PARAMERR, errmsg='缺少参数')
+
+    file = request.files.get('house_image')
+    
+    if not file:
+        return jsonify(errno=RET.PARAMERR, errmsg='缺少参数')
+        
+    try:
+        house = House.query.get(house_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='查询房屋信息失败')
+        
+    if not house:
+        return jsonify(errno=RET.NODATA, errmsg='房屋不存在')
+
+    # 2. 上传房屋的图片到七牛云
+    try:
+        key = image_storage(file.read())
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.THIRDERR, errmsg='上传房屋图片失败')
+
+    # 3. 创建HouseImage对象并保存房屋图片信息
+    house_image = HouseImage()
+    house_image.house_id = house_id
+    house_image.url = key
+    
+    # 4. 添加房屋图片信息到数据库
+    try:
+        db.session.add(house_image)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='保存房屋图片信息失败')
+        
+    # 5. 返回应答
+    img_url = constants.QINIU_DOMIN_PREFIX + key
+    return jsonify(errno=RET.OK, errmsg='OK', data={'img_url': img_url})
 
 
 @api.route('/houses', methods=["POST"])
@@ -76,16 +134,16 @@ def save_new_house():
         return jsonify(errno=RET.DBERR, errmsg='获取房屋设施信息失败')
 
     # 3. 将房屋的基本信息添加进数据库
-    # try:
-    #     db.session.add(house)
-    #     db.session.commit()
-    # except Exception as e:
-    #     db.session.rollback()
-    #     current_app.logger.error(e)
-    #     return jsonify(errno=RET.DBERR, errmsg='保存房屋信息失败')
+    try:
+        db.session.add(house)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='保存房屋信息失败')
 
     # 4. 返回应答
-    return jsonify(errno=RET.OK, errmsg='OK')
+    return jsonify(errno=RET.OK, errmsg='OK', data={'house_id': house.id})
 
 
 @api.route('/areas')
