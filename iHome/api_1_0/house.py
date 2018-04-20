@@ -12,6 +12,27 @@ from iHome.utils.image_storage import image_storage
 from flask import current_app, jsonify, request, g
 
 
+@api.route('/house/<int:house_id>')
+def get_house_info(house_id):
+    """
+    获取房屋的详情信息:
+    1. 根据房屋id获取房屋信息（如果查不到，代表房屋不存在)
+    2. 组织数据，返回应答
+    """
+    # 1. 根据房屋id获取房屋信息（如果查不到，代表房屋不存在)
+    try:
+        house = House.query.get(house_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='查询房屋信息失败')
+
+    if not house:
+        return jsonify(errno=RET.NODATA, errmsg='房屋不存在')
+
+    # 2. 组织数据，返回应答
+    return jsonify(errno=RET.OK, errmsg='OK', data=house.to_full_dict())
+
+
 @api.route('/houses/image', methods=["POST"])
 @login_required
 def save_house_image():
