@@ -13,6 +13,27 @@ from iHome.utils.image_storage import image_storage
 from flask import current_app, jsonify, request, g, session
 
 
+@api.route('/houses')
+def get_house_list():
+    """
+    搜索房屋的信息:
+    """
+    # 获取所有房屋的信息
+    try:
+        houses = House.query.all()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='查询房屋信息失败')
+
+    # 组织数据
+    houses_dict_li = []
+    for house in houses:
+        houses_dict_li.append(house.to_basic_dict())
+
+    # 返回应答
+    return jsonify(errno=RET.OK, errmsg='OK', data={'houses': houses_dict_li})
+
+
 @api.route('/houses/index')
 def get_houses_index():
     """
