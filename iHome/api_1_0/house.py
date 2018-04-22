@@ -1,10 +1,11 @@
 # coding=utf-8
 # 此文件定义和房屋有关的api
 import json
+from datetime import datetime
 from . import api
 
 from iHome import db, constants, redis_store
-from iHome.models import Area
+from iHome.models import Area, Order
 from iHome.response_code import RET
 from iHome.models import House, Facility, HouseImage
 from iHome.utils.commons import login_required
@@ -23,12 +24,25 @@ def get_house_list():
     # new: 最新上线 booking: 入住最多 price-inc: 价格低->高 price-des: 价格高->低
     sort_key = request.args.get('sk', 'new')
     page = request.args.get('p')
+    sd = request.args.get('sd')
+    ed = request.args.get('ed')
 
+    start_date = None
+    end_date = None
     try:
         if area_id:
             area_id = int(area_id)
 
         page = int(page)
+
+        if sd:
+            start_date = datetime.strptime(sd, '%Y-%m-%d')
+
+        if ed:
+            end_date = datetime.strptime(ed, '%Y-%m-%d')
+
+        if start_date and end_date:
+            assert start_date < end_date, Exception('起始时间大于结束时间')
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
@@ -41,6 +55,25 @@ def get_house_list():
         # 根据城区的id过滤房屋的信息，返回查询
         if area_id:
             houses_query = houses_query.filter(House.area_id == area_id)
+
+        # 获取冲突订单
+        try:
+            conflict_orders_li = []
+            if start_date and end_date:
+                conflict_orders_li = Order.query.filter(end_date > Order.begin_date, start_date < Order.end_date).all()
+            elif start_date:
+                conflict_orders_li = Order.query.filter(start_date < Order.end_date).all()
+            elif end_date:
+                conflict_orders_li = Order.query.filter(end_date > Order.begin_date).all()
+
+            if conflict_orders_li:
+                # 获取冲突订单对应的房屋id
+                conflict_houses_id = [order.house_id for order in conflict_orders_li]
+                houses_query = houses_query.filter(House.id.notin_(conflict_houses_id))
+
+        except Exception as e:
+            current_app.logger.error(e)
+            return jsonify(errno=RET.DBERR, errmsg='查询冲突订单失败')
 
         # 进行排序
         if sort_key == 'booking':
