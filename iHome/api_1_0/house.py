@@ -18,9 +18,47 @@ def get_house_list():
     """
     搜索房屋的信息:
     """
+    print request.args
+    area_id = request.args.get('aid')
+    # new: 最新上线 booking: 入住最多 price-inc: 价格低->高 price-des: 价格高->低
+    sort_key = request.args.get('sk', 'new')
+    page = request.args.get('p')
+
+    try:
+        if area_id:
+            area_id = int(area_id)
+
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+
     # 获取所有房屋的信息
     try:
-        houses = House.query.all()
+        # houses = House.query.all()
+        houses_query = House.query
+
+        # 根据城区的id过滤房屋的信息，返回查询
+        if area_id:
+            houses_query = houses_query.filter(House.area_id == area_id)
+
+        # 进行排序
+        if sort_key == 'booking':
+            houses_query = houses_query.order_by(House.order_count.desc())
+        elif sort_key == 'price-inc':
+            houses_query = houses_query.order_by(House.price)
+        elif sort_key == 'price-des':
+            houses_query = houses_query.order_by(House.price.desc())
+        else:
+            houses_query = houses_query.order_by(House.create_time.desc())
+
+        # 分页操作
+        house_paginate = houses_query.paginate(page, constants.HOUSE_LIST_PAGE_CAPACITY, False)
+        # 获取当前页的结果列表
+        houses = house_paginate.items
+        # 获取分页之后的总页数
+        total_page = house_paginate.pages
+
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg='查询房屋信息失败')
@@ -31,7 +69,7 @@ def get_house_list():
         houses_dict_li.append(house.to_basic_dict())
 
     # 返回应答
-    return jsonify(errno=RET.OK, errmsg='OK', data={'houses': houses_dict_li})
+    return jsonify(errno=RET.OK, errmsg='OK', data={'houses': houses_dict_li, 'total_page': total_page})
 
 
 @api.route('/houses/index')
