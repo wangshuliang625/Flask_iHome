@@ -47,6 +47,16 @@ def get_house_list():
         current_app.logger.error(e)
         return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
 
+    # 尝试从缓存中获取搜索结果
+    try:
+        key = 'house:%s:%s:%s:%s' % (area_id, sd, ed, sort_key)
+        res_json_str = redis_store.hget(key, page)
+        if res_json_str:
+            resp = json.loads(res_json_str)
+            return jsonify(errno=RET.OK, errmsg='OK', data=resp)
+    except Exception as e:
+        current_app.logger.error(e)
+
     # 获取所有房屋的信息
     try:
         # houses = House.query.all()
@@ -101,8 +111,25 @@ def get_house_list():
     for house in houses:
         houses_dict_li.append(house.to_basic_dict())
 
+    # 在redis中缓存数据
+    resp = {'houses': houses_dict_li, 'total_page': total_page}
+    try:
+        key = 'house:%s:%s:%s:%s' % (area_id, sd, ed, sort_key)
+
+        # 获取管道对象
+        pipeline = redis_store.pipeline()
+        # 开启redis事务
+        pipeline.multi()
+        # 向管道中添加执行命令
+        pipeline.hset(key, page, json.dumps(resp))
+        pipeline.expire(key, constants.HOUSE_LIST_REDIS_EXPIRES)
+        # 提交redis事务
+        pipeline.execute()
+    except Exception as e:
+        current_app.logger.error(e)
+
     # 返回应答
-    return jsonify(errno=RET.OK, errmsg='OK', data={'houses': houses_dict_li, 'total_page': total_page})
+    return jsonify(errno=RET.OK, errmsg='OK', data=resp)
 
 
 @api.route('/houses/index')
