@@ -13,6 +13,69 @@ from iHome.utils.commons import login_required
 from . import api
 
 
+# /orders/<int:order_id>/status?action=accept|reject
+@api.route('/orders/<int:order_id>/status')
+def update_order_status(order_id):
+    """
+    进行接单或者拒单操作：
+    1. 接收参数action并进行校验，action==accept(接单) action==reject(拒单)
+    2. 根据订单的id去查询订单的信息(如果查询不到，说明订单不存在)
+    3. 根据action设置订单的状态，(如果是拒单，需要接收拒单原因)
+    4. 更新数据库中数据
+    5. 返回应答
+    """
+    # 1. 接收参数action并进行校验，action==accept(接单) action==reject(拒单)
+    action = request.args.get('action')
+    if action not in ('accept', 'reject'):
+        return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+
+    # 2. 根据订单的id去查询订单的信息(如果查询不到，说明订单不存在)
+    try:
+        # 找到订单对应的房屋的房东
+        order = Order.query.filter(Order.id == order_id,
+                                   Order.status == 'WAIT_ACCEPT').first() # 订单的状态必须处于待接单的状态
+
+        # 获取房东id
+        landlord_id = order.house.user_id
+
+        # 判断当前登录的用户是否是房东
+        if landlord_id != g.user_id:
+            # 不是房东
+            return jsonify(errno=RET.DATAERR, errmsg='不是房东')
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='查询订单失败')
+
+    if not order:
+        return jsonify(errno=RET.NODATA, errmsg='订单不存在')
+
+    # 3. 根据action设置订单的状态，(如果是拒单，需要接收拒单原因)
+    if action == 'accept':
+        # 接单
+        order.status = 'WAIT_COMMENT' # 待评价
+    else:
+        # 拒单
+        # 接收拒单原因
+        req_dict = request.json
+        reason = req_dict.get('reason')
+        if not reason:
+            return jsonify(errno=RET.PARAMERR, errmsg='缺少参数')
+        
+        order.comment = reason
+        order.status = 'REJECTED'
+
+    # 4. 更新数据库中数据
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='保存订单信息失败')
+        
+    # 5. 返回应答
+    return jsonify(errno=RET.OK, errmsg='OK')
+
+
 # /orders?role=lodger
 # role=lodger, 代表以房客的身份查询预订其他人房屋的订单
 # role=landlord, 代表以房东的身份查询其他人预订自己房屋的订单
@@ -47,7 +110,7 @@ def get_order_list():
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg='查询订单信息失败')
-    
+
     # 2. 组织数据，返回应答
     orders_dict_li = []
     for order in orders:
