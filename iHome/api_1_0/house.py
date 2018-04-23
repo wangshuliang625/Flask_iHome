@@ -17,7 +17,13 @@ from flask import current_app, jsonify, request, g, session
 @api.route('/houses')
 def get_house_list():
     """
-    搜索房屋的信息:
+    搜索房屋信息:
+    1. 接收参数并进行参数校验（城区id，起始时间，结束时间，排序方式，页码）
+    2. 根据城区的id过滤房屋数据
+    3. 根据搜索的起始时间和结束时间排序冲突的房屋信息
+    4. 根据排序方式进行排序
+    5. 对搜索结果的进行分页操作
+    6. 组织数据(将房屋信息转换为字典数据)并返回应答
     """
     print request.args
     area_id = request.args.get('aid')
