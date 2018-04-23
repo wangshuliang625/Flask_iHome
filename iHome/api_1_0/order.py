@@ -58,7 +58,6 @@ def save_order_comment(order_id):
     return jsonify(errno=RET.OK, errmsg='OK')
 
 
-
 # /orders/<int:order_id>/status?action=accept|reject
 @api.route('/orders/<int:order_id>/status', methods=['PUT'])
 @login_required
