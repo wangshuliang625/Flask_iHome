@@ -101,7 +101,10 @@ $(document).ready(function(){
             "success": function (resp) {
                 if (resp.errno == "0") {
                     // 订单创建成功，跳转到用户的订单页面
-                    location.href = 'lorders.html';
+                    location.href = 'orders.html';
+                }
+                else if (resp.errno == "4101") {
+                    location.href = 'login.html';
                 }
                 else {
                     // 出错

@@ -25,7 +25,7 @@ def get_house_list():
     5. 对搜索结果的进行分页操作
     6. 组织数据(将房屋信息转换为字典数据)并返回应答
     """
-    print request.args
+    # print request.args
     area_id = request.args.get('aid')
     # new: 最新上线 booking: 入住最多 price-inc: 价格低->高 price-des: 价格高->低
     sort_key = request.args.get('sk', 'new')

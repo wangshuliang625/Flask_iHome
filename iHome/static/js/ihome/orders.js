@@ -19,6 +19,21 @@ $(document).ready(function(){
     $(window).on('resize', centerModals);
 
     // TODO: 查询房客订单
+    $.get("/api/v1.0/orders", function (resp) {
+        if (resp.errno == "0") {
+            // 成功
+            var html = template("orders-list-tmpl", {"orders": resp.data});
+            $(".orders-list").html(html);
+        }
+        else if (resp.errno == "4101") {
+            // 用户未登录，跳转到登录页面
+            location.href = "login.html";
+        }
+        else {
+            // 出错
+            alert(resp.errmsg);
+        }
+    })
 
     // TODO: 查询成功之后需要设置评论的相关处理
     $(".order-comment").on("click", function(){
