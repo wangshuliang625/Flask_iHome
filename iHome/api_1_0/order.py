@@ -14,7 +14,8 @@ from . import api
 
 
 # /orders/<int:order_id>/status?action=accept|reject
-@api.route('/orders/<int:order_id>/status')
+@api.route('/orders/<int:order_id>/status', methods=['PUT'])
+@login_required
 def update_order_status(order_id):
     """
     进行接单或者拒单操作：
