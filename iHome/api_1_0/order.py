@@ -13,6 +13,52 @@ from iHome.utils.commons import login_required
 from . import api
 
 
+@api.route('/orders/<int:order_id>/comment', methods=['PUT'])
+@login_required
+def save_order_comment(order_id):
+    """
+    保存订单的评论的信息:
+    1. 接收评论参数并进行参数校验
+    2. 根据订单id查询订单的信息(如果查询不到，说明订单不存在)
+    3. 更改订单的状态并设置评论，然后更新数据库
+    4. 返回应答
+    """
+    # 1. 接收评论参数并进行参数校验
+    req_dict = request.json
+    comment = req_dict.get('comment')
+
+    if not comment:
+        return jsonify(errno=RET.PARAMERR, errmsg='缺少参数')
+
+    # 2. 根据订单id查询订单的信息(如果查询不到，说明订单不存在)
+    try:
+        order = Order.query.filter(Order.id == order_id,
+                                   Order.user_id == g.user_id,
+                                   Order.status == 'WAIT_COMMENT').first()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='查询订单信息失败')
+
+    if not order:
+        return jsonify(errno=RET.NODATA, errmsg='订单不存在')
+
+    # 3. 更改订单的状态并设置评论，然后更新数据库
+    order.comment = comment
+    order.status = 'COMPLETE'
+
+    # 4. 更新数据库中数据
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='保存订单信息失败')
+
+    # 5. 返回应答
+    return jsonify(errno=RET.OK, errmsg='OK')
+
+
+
 # /orders/<int:order_id>/status?action=accept|reject
 @api.route('/orders/<int:order_id>/status', methods=['PUT'])
 @login_required
