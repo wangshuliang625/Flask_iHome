@@ -13,28 +13,71 @@ from iHome.utils.commons import login_required
 from . import api
 
 
+# /orders?role=lodger
+# role=lodger, 代表以房客的身份查询预订其他人房屋的订单
+# role=landlord, 代表以房东的身份查询其他人预订自己房屋的订单
 @api.route('/orders')
 @login_required
 def get_order_list():
     """
     获取用户的订单信息:
-    1. 根据用户的id查询出用户的所有订单的信息，按照订单的创建时间进行排序
+    1. 获取查询订单时用户的身份
+        1.1 如果role==lodger, 代表以房客的身份查询预订其他人房屋的订单
+        1.2 如果role=landlord, 代表以房东的身份查询其他人预订自己房屋的订单
     2. 组织数据，返回应答
-    """
-    # 1. 根据用户的id查询出用户的所有订单的信息，按照订单的创建时间进行排序
+    """ 
+    # 1. 获取查询订单时用户的身份
+    role = request.args.get('role')
+    if role not in ('lodger', 'landlord'):
+        return jsonify(errno=RET.PARAMERR, errmsg='数据错误')
+
     user_id = g.user_id
+
     try:
-        orders = Order.query.filter(Order.user_id == user_id).all()
+        if role == 'lodger':
+            # 1.1 如果role==lodger, 代表以房客的身份查询预订其他人房屋的订单
+            orders = Order.query.filter(Order.user_id == user_id).all()
+        else:
+            # 1.2 如果role=landlord, 代表以房东的身份查询其他人预订自己房屋的订单
+            # 获取房东的所有房屋的信息
+            houses = House.query.filter(House.user_id == user_id).all()
+            houses_id_li = [house.id for house in houses]
+            # 查询出订单中房屋的id在houses_id_li列表中的数据
+            orders = Order.query.filter(Order.house_id.in_(houses_id_li)).all()
     except Exception as e:
         current_app.logger.error(e)
-        return jsonify(errno=RET.DBERR, errmsg='查询订单失败')
-
+        return jsonify(errno=RET.DBERR, errmsg='查询订单信息失败')
+    
     # 2. 组织数据，返回应答
     orders_dict_li = []
     for order in orders:
         orders_dict_li.append(order.to_dict())
 
     return jsonify(errno=RET.OK, errmsg='OK', data=orders_dict_li)
+
+
+# @api.route('/orders')
+# @login_required
+# def get_order_list():
+#     """
+#     获取用户的订单信息:
+#     1. 根据用户的id查询出用户的所有订单的信息，按照订单的创建时间进行排序
+#     2. 组织数据，返回应答
+#     """
+#     # 1. 根据用户的id查询出用户的所有订单的信息，按照订单的创建时间进行排序
+#     user_id = g.user_id
+#     try:
+#         orders = Order.query.filter(Order.user_id == user_id).all()
+#     except Exception as e:
+#         current_app.logger.error(e)
+#         return jsonify(errno=RET.DBERR, errmsg='查询订单失败')
+#
+#     # 2. 组织数据，返回应答
+#     orders_dict_li = []
+#     for order in orders:
+#         orders_dict_li.append(order.to_dict())
+#
+#     return jsonify(errno=RET.OK, errmsg='OK', data=orders_dict_li)
 
 
 @api.route('/orders', methods=['POST'])
